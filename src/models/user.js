@@ -6,9 +6,23 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
+        validate(value) {
+            if (!value) {
+                throw new Error("firstName is required");
+            } else if (!(value.length >= 3 && value.length <= 12)) {
+                throw new Error("firstName should be in 3 to 12 characters")
+            }
+        }
     },
     lastName: {
         type: String,
+        validate(value) {
+            if (!value) {
+                throw new Error("lastName is required")
+            } else if (!(value.length >= 3 && value.length <= 12)) {
+                throw new Error("lastName should be in 3 to 12 characters")
+            }
+        }
     },
     emailId: {
         type: String,
@@ -16,14 +30,31 @@ const userSchema = new mongoose.Schema({
         required: true,
         lowercase: true,
         trim: true,
+        validate(value) {
+            if (!value) {
+                throw new Error("emailId is required");
+            } else if (!validator.isEmail(value)) {
+                throw new Error("Invalid email address");
+            }
+        }
     },
     password: {
         type: String,
+        validate(value) {
+            if (!value) {
+                throw new Error("password is required");
+            } else if (!validator.isStrongPassword(value)) {
+                throw new Error("Strong password is required (A-Z, a-z, 1-9, special character) must 8 digit");
+            }
+        }
     },
     age: {
         type: Number,
-        min: 10,
-        max: 99,
+        validate(value) {
+            if (!(value >= 10 && value <= 80)) {
+                throw new Error("Age should be in 10 to 80");
+            }
+        }
     },
     gender: {
         type: String,
@@ -44,28 +75,48 @@ const userSchema = new mongoose.Schema({
     },
     about: {
         type: String,
-        maxLength: 200,
+        validate(value) {
+            if (!value.length <= 200) {
+                throw new Error("About should be under 200 words")
+            }
+        }
     },
     skills: {
         type: [String],
-        maxLength: 200,
+        validate(value) {
+            if (!value.length > 10) {
+                throw new Error("Skills should be under 10")
+            }
+        }
     }
 
 }, { timestamps: true })
 
 userSchema.methods.getJWT = async function () {
-    const token = await jwt.sign({ _id: this._id }, "DEV@TINDER$2885", { expiresIn: '1d' });
-    return token;
+    try {
+        const token = await jwt.sign({ _id: this._id }, "DEV@TINDER$2885", { expiresIn: '1d' });
+        return token;
+    } catch (error) {
+        throw new Error("Error while getting jwt token");
+    }
 }
 
 userSchema.methods.getBcryptPassword = async function (password) {
-    const bcryptPass = await bcrypt.hash(password, 10);
-    return bcryptPass;
+    try {
+        const bcryptPass = await bcrypt.hash(password, 10);
+        return bcryptPass;
+    } catch (error) {
+        throw new Error("Error while hashing password");
+    }
 }
 
 userSchema.methods.checkBcryptPassword = async function (password) {
-    const isPasswordValid = await bcrypt.compare(password, this.password);
-    return isPasswordValid
+    try {
+        const isPasswordValid = await bcrypt.compare(password, this.password);
+        return isPasswordValid
+    } catch (error) {
+        throw new Error("Error while checking password");
+    }
 }
 
 module.exports = mongoose.model("User", userSchema);

@@ -11,17 +11,13 @@ const isEmailAlreadyRegistered = async (req) => {
     }
 }
 
-const isUpdateAllowed = (req) => {
+const updationAllowed = (req) => {
     const data = req.body;
-
-    const UPDATE_ALLOWED = ["age", "gender", "profileUrl", "about", "skills"]
-    const isUpdateAllowed = Object.keys(data).every((k) => UPDATE_ALLOWED.includes(k));
-
+    const updateAllowed = ["firstName", "lastName", "age", "gender", "profileUrl", "about", "skills"];
+    const isUpdateAllowed = Object.keys(data).every((k) => updateAllowed.includes(k));
+    
     if (!isUpdateAllowed) {
-        throw new Error("Update not allowed (firstName, lastName, email & password) could not be changed")
-    }
-    if (data?.skills?.length > 10) {
-        throw new Error("Skills cannot be more than 10")
+        throw new Error("Update not allowed");
     }
 }
 
@@ -35,5 +31,5 @@ const isGettingData = (req) => {
 module.exports = {
     isEmailAlreadyRegistered,
     isGettingData,
-    isUpdateAllowed
+    updationAllowed
 }
